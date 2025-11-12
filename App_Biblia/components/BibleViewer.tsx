@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import type { ChapterData, Highlight, HighlightCategory } from '../types';
+import React, { useEffect, useRef } from 'react';
+import type { ChapterData, Highlight, HighlightCategory, FontSize } from '../types';
 import { HIGHLIGHT_CATEGORIES } from '../constants';
 
 interface BibleViewerProps {
@@ -10,10 +10,17 @@ interface BibleViewerProps {
   saveStatus: string;
   onTitleClick: () => void;
   scrollToVerse: number | null;
+  fontSize: FontSize;
 }
 
-const BibleViewer: React.FC<BibleViewerProps> = ({ chapter, highlights, onAddHighlight, title, saveStatus, onTitleClick, scrollToVerse }) => {
-  const [selectedText, setSelectedText] = useState<string>('');
+const fontSizeClasses: Record<FontSize, string> = {
+  sm: 'text-base sm:text-lg',
+  md: 'text-lg sm:text-xl',
+  lg: 'text-xl sm:text-2xl',
+  xl: 'text-2xl sm:text-3xl',
+};
+
+const BibleViewer: React.FC<BibleViewerProps> = ({ chapter, highlights, onAddHighlight, title, saveStatus, onTitleClick, scrollToVerse, fontSize }) => {
   const versesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,17 +35,18 @@ const BibleViewer: React.FC<BibleViewerProps> = ({ chapter, highlights, onAddHig
         }
     }
   }, [scrollToVerse]);
-
-  const handleTextSelection = () => {
-    const text = window.getSelection()?.toString().trim() ?? '';
-    setSelectedText(text);
-  };
   
-  const handleHighlightClick = (category: HighlightCategory) => {
-    if (selectedText.length > 0) {
-      onAddHighlight(selectedText, category);
-      setSelectedText('');
-      window.getSelection()?.removeAllRanges();
+  const handleHighlight = (e: React.MouseEvent | React.TouchEvent, category: HighlightCategory) => {
+    e.preventDefault(); // Prevents losing focus/selection on touch and mouse
+    
+    const selection = window.getSelection();
+    const textToHighlight = selection?.toString().trim() ?? '';
+    
+    if (textToHighlight.length > 0) {
+      onAddHighlight(textToHighlight, category);
+      if (selection) {
+        selection.removeAllRanges();
+      }
     }
   };
 
@@ -73,6 +81,19 @@ const BibleViewer: React.FC<BibleViewerProps> = ({ chapter, highlights, onAddHig
     return parts.map((part, index) => <React.Fragment key={index}>{part}</React.Fragment>);
   };
 
+  const highlightButtons = HIGHLIGHT_CATEGORIES.map(category => (
+    <button
+        key={category.name}
+        onMouseDown={(e) => handleHighlight(e, category)}
+        onTouchEnd={(e) => handleHighlight(e, category)}
+        aria-label={`Grifar como ${category.name}`}
+        className="w-8 h-8 rounded-full border-2 border-gray-600 transition-all duration-200 hover:scale-110 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 flex-shrink-0"
+        title={category.name}
+    >
+        <span className={`block w-full h-full rounded-full ${category.colorClass}`}></span>
+    </button>
+  ));
+
   return (
     <div className="relative select-text pt-10">
       {title && <h2 className="text-2xl font-bold text-center text-yellow-400 mb-6 tracking-wide">{title}</h2>}
@@ -84,11 +105,22 @@ const BibleViewer: React.FC<BibleViewerProps> = ({ chapter, highlights, onAddHig
         {chapter.reference}
       </h2>
       
+      {/* Mobile Toolbar (Horizontal, Top, Sticky) */}
+      <div className="md:hidden sticky top-0 z-20 py-2 bg-gray-900/80 backdrop-blur-sm -mx-6 px-6 mb-4">
+          <div className="flex justify-center items-center gap-4 p-2 rounded-lg bg-gray-700/50 border border-gray-600/50 relative">
+              {highlightButtons}
+              <div className={`transition-opacity duration-500 absolute top-full mt-2 ${saveStatus ? 'opacity-100' : 'opacity-0'}`}>
+                    <span className="px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded-full shadow-lg">
+                        {saveStatus}
+                    </span>
+                </div>
+          </div>
+      </div>
+
       <div className="flex gap-6">
         {/* Verse text on the left */}
         <div 
-          onMouseUp={handleTextSelection}
-          className="flex-grow space-y-3 text-lg sm:text-xl leading-relaxed text-gray-300 text-left"
+          className={`flex-grow space-y-3 leading-relaxed text-gray-300 text-left ${fontSizeClasses[fontSize]}`}
           ref={versesContainerRef}
         >
             {chapter.verses.map(v => (
@@ -99,21 +131,11 @@ const BibleViewer: React.FC<BibleViewerProps> = ({ chapter, highlights, onAddHig
             ))}
         </div>
 
-        {/* Sticky toolbar on the right */}
-        <div className="relative w-12 flex-shrink-0" aria-live="polite">
+        {/* Desktop Toolbar (Vertical, Side, Sticky) */}
+        <div className="hidden md:block relative w-12 flex-shrink-0" aria-live="polite">
             <div className="sticky top-24">
                 <div className="flex flex-col items-center gap-4 p-2 rounded-lg bg-gray-700/50 backdrop-blur-sm border border-gray-600/50">
-                    {HIGHLIGHT_CATEGORIES.map(category => (
-                        <button
-                            key={category.name}
-                            onClick={() => handleHighlightClick(category)}
-                            aria-label={`Grifar como ${category.name}`}
-                            className="w-8 h-8 rounded-full border-2 border-gray-600 transition-all duration-200 hover:scale-110 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                            title={category.name}
-                        >
-                            <span className={`block w-full h-full rounded-full ${category.colorClass}`}></span>
-                        </button>
-                    ))}
+                    {highlightButtons}
                 </div>
                 <div className={`transition-opacity duration-500 absolute top-full left-1/2 -translate-x-1/2 mt-3 w-max ${saveStatus ? 'opacity-100' : 'opacity-0'}`}>
                     <span className="px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded-full shadow-lg">

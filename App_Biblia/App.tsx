@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { ChapterData, Highlight, HighlightCategory } from './types';
+import type { ChapterData, Highlight, HighlightCategory, FontSize } from './types';
 import { fetchReference } from './services/bibleService';
 import { HIGHLIGHT_CATEGORIES, INSPIRATIONAL_VERSES } from './constants';
 import SearchForm from './components/SearchForm';
@@ -10,6 +10,8 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { PsalmOfDay } from './components/PsalmOfDay';
 import BibleBrowser from './components/BibleBrowser';
 import VerseSelector from './components/VerseSelector';
+
+const FONT_SIZES: FontSize[] = ['sm', 'md', 'lg', 'xl'];
 
 const App: React.FC = () => {
   const [view, setView] = useState<'home' | 'viewer'>('home');
@@ -23,7 +25,7 @@ const App: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState('');
   const [viewerSubView, setViewerSubView] = useState<'reading' | 'verse_selection'>('reading');
   const [scrollToVerse, setScrollToVerse] = useState<number | null>(null);
-
+  const [fontSize, setFontSize] = useState<FontSize>('md');
 
   useEffect(() => {
     try {
@@ -31,8 +33,12 @@ const App: React.FC = () => {
       if (savedHighlights) {
         setHighlights(JSON.parse(savedHighlights));
       }
+      const savedFontSize = localStorage.getItem('bible-font-size') as FontSize;
+      if (savedFontSize && FONT_SIZES.includes(savedFontSize)) {
+        setFontSize(savedFontSize);
+      }
     } catch (e) {
-      console.error("Failed to load highlights from localStorage", e);
+      console.error("Failed to load data from localStorage", e);
     }
   }, []);
 
@@ -43,6 +49,28 @@ const App: React.FC = () => {
       console.error("Failed to save highlights to localStorage", e);
     }
   }, [highlights]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('bible-font-size', fontSize);
+    } catch (e) {
+      console.error("Failed to save font size to localStorage", e);
+    }
+  }, [fontSize]);
+
+  const increaseFontSize = () => {
+    const currentIndex = FONT_SIZES.indexOf(fontSize);
+    if (currentIndex < FONT_SIZES.length - 1) {
+      setFontSize(FONT_SIZES[currentIndex + 1]);
+    }
+  };
+
+  const decreaseFontSize = () => {
+    const currentIndex = FONT_SIZES.indexOf(fontSize);
+    if (currentIndex > 0) {
+      setFontSize(FONT_SIZES[currentIndex - 1]);
+    }
+  };
 
   const loadReferenceInViewer = useCallback(async (query: string) => {
     if (!query) return;
@@ -132,14 +160,21 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 flex flex-col items-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-4xl mx-auto">
-        <Header onShowHighlights={() => setIsModalOpen(true)} highlightCount={highlights.length} onGoHome={handleGoHome} />
+        <Header 
+          onShowHighlights={() => setIsModalOpen(true)} 
+          highlightCount={highlights.length} 
+          onGoHome={handleGoHome}
+          fontSize={fontSize}
+          onIncreaseFontSize={increaseFontSize}
+          onDecreaseFontSize={decreaseFontSize}
+        />
         
         <main className="mt-8">
           <SearchForm onSearch={loadReferenceInViewer} loading={chapterLoading} />
           
            {view === 'home' && (
             <div className="mt-8">
-              <PsalmOfDay data={verseOfDayData} loading={verseOfDayLoading} />
+              <PsalmOfDay data={verseOfDayData} loading={verseOfDayLoading} fontSize={fontSize} />
               <BibleBrowser onSelectChapter={(book, chapter) => loadReferenceInViewer(`${book} ${chapter}`)} />
             </div>
            )}
@@ -170,6 +205,7 @@ const App: React.FC = () => {
                             saveStatus={saveStatus}
                             onTitleClick={() => setViewerSubView('verse_selection')}
                             scrollToVerse={scrollToVerse}
+                            fontSize={fontSize}
                         />
                     )}
                     {viewerSubView === 'verse_selection' && (

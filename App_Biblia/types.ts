@@ -20,3 +20,5 @@ export interface Highlight {
   text: string;
   categoryName: string;
 }
+
+export type FontSize = 'sm' | 'md' | 'lg' | 'xl';
