@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({ onShowHighlights, highlightCount
                 className="text-2xl sm:text-3xl font-bold text-cyan-400 tracking-tight cursor-pointer hover:text-cyan-300 transition-colors"
                 title="Voltar à página inicial"
             >
-                Bíblia de Estudo Interativa
+                Estudo Bíblico Célula Cresça
             </h1>
 
             <div className="flex items-center gap-4 sm:gap-6">
