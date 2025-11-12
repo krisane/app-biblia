@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bíblia de Estudo Interativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .highlight-yellow { background-color: rgba(250, 204, 21, 0.6); }
+      .highlight-blue { background-color: rgba(59, 130, 246, 0.6); }
+      .highlight-green { background-color: rgba(74, 222, 128, 0.6); }
+      .highlight-pink { background-color: rgba(244, 114, 182, 0.6); }
+
+      @keyframes flash {
+        0% { background-color: transparent; }
+        50% { background-color: rgba(34, 211, 238, 0.3); } /* Cyan flash */
+        100% { background-color: transparent; }
+      }
+      .flash-highlight {
+        animation: flash 1.5s ease-out;
+        border-radius: 4px; /* Optional: adds rounded corners to the flash */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-gray-900 text-gray-200">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
